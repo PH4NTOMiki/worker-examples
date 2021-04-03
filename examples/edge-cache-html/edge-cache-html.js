@@ -132,7 +132,9 @@ function shouldBypassEdgeCache(request, response) {
     }
     if (cookieHeader && cookieHeader.length && bypassCookies.length) {
       const cookies = cookieHeader.split(';');
+      console.log(cookies, bypassCookies);
       for (let cookie of cookies) {
+        if (['wordpress_eli', 'wordpress_test_cookie'].includes(cookie.trim().split('=')[0])){break;}
         // See if the cookie starts with any of the logged-in user prefixes
         for (let prefix of bypassCookies) {
           if (cookie.trim().startsWith(prefix)) {
