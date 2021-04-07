@@ -476,7 +476,7 @@ async function fetchCSS(url, request) {
   } else {
     // Try pulling it from the cache API (wrap it in case it's not implemented)
     try {
-      cache = caches.default;
+      cache = FONTS_CACHE;
       let response = await cache.match(cacheKeyRequest);
       if (response) {
         fontCSS = await response.text();
