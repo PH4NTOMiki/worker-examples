@@ -23,7 +23,7 @@ const DEFAULT_BYPASS_COOKIES = [
  */
 addEventListener("fetch", event => {
   const request = event.request;
-  let upstreamCache = request.headers.get('x-HTML-Edge-Cache');
+  let upstreamCache = request.headers.get('X-HTML-Edge-Cache');
 
   // Only process requests if KV store is set up and there is no
   // HTML edge cache in front of this worker (only the outermost cache
@@ -64,7 +64,7 @@ async function processRequest(originalRequest, event) {
   if (response === null) {
     // Clone the request, add the edge-cache header and send it through.
     let request = new Request(originalRequest);
-    request.headers.set('x-HTML-Edge-Cache', 'supports=cache|purgeall|bypass-cookies');
+    request.headers.set('X-HTML-Edge-Cache', 'supports=cache|purgeall|bypass-cookies');
     response = await fetch(request);
 
     if (response) {
@@ -99,9 +99,9 @@ async function processRequest(originalRequest, event) {
 
   if (response && status !== null && originalRequest.method === 'GET' && response.status === 200 && isHTML) {
     response = new Response(response.body, response);
-    response.headers.set('x-HTML-Edge-Cache-Status', status);
+    response.headers.set('X-HTML-Edge-Cache-Status', status);
     if (cacheVer !== null) {
-      response.headers.set('x-HTML-Edge-Cache-Version', cacheVer.toString());
+      response.headers.set('X-HTML-Edge-Cache-Version', cacheVer.toString());
     }
     if (cfCacheStatus) {
       response.headers.set('CF-Cache-Status', cfCacheStatus);
@@ -196,11 +196,11 @@ async function getCachedResponse(request) {
         } else {
           status = 'Hit';
           cachedResponse.headers.delete('Cache-Control');
-          cachedResponse.headers.delete('x-HTML-Edge-Cache-Status');
+          cachedResponse.headers.delete('X-HTML-Edge-Cache-Status');
           for (header of CACHE_HEADERS) {
-            let value = cachedResponse.headers.get('x-HTML-Edge-Cache-Header-' + header);
+            let value = cachedResponse.headers.get('X-HTML-Edge-Cache-Header-' + header);
             if (value) {
-              cachedResponse.headers.delete('x-HTML-Edge-Cache-Header-' + header);
+              cachedResponse.headers.delete('X-HTML-Edge-Cache-Header-' + header);
               cachedResponse.headers.set(header, value);
             }
           }
@@ -251,7 +251,7 @@ async function purgeCache(cacheVer, event) {
 async function updateCache(originalRequest, cacheVer, event) {
   // Clone the request, add the edge-cache header and send it through.
   let request = new Request(originalRequest);
-  request.headers.set('x-HTML-Edge-Cache', 'supports=cache|purgeall|bypass-cookies');
+  request.headers.set('X-HTML-Edge-Cache', 'supports=cache|purgeall|bypass-cookies');
   response = await fetch(request);
 
   if (response) {
@@ -294,11 +294,11 @@ async function cacheResponse(cacheVer, request, originalResponse, event) {
         let value = response.headers.get(header);
         if (value) {
           response.headers.delete(header);
-          response.headers.set('x-HTML-Edge-Cache-Header-' + header, value);
+          response.headers.set('X-HTML-Edge-Cache-Header-' + header, value);
         }
       }
       response.headers.delete('Set-Cookie');
-      response.headers.set('Cache-Control', 'public; max-age=315360000');
+      response.headers.set('Cache-Control', 'public; maX-age=315360000');
       event.waitUntil(cache.put(cacheKeyRequest, response));
       status = ", Cached";
     } catch (err) {
@@ -313,13 +313,13 @@ async function cacheResponse(cacheVer, request, originalResponse, event) {
  *****************************************************************************/
 
 /**
- * Parse the commands from the x-HTML-Edge-Cache response header.
+ * Parse the commands from the X-HTML-Edge-Cache response header.
  * @param {Response} response - HTTP response from the origin.
  * @returns {*} Parsed commands
  */
 function getResponseOptions(response) {
   let options = null;
-  let header = response.headers.get('x-HTML-Edge-Cache');
+  let header = response.headers.get('X-HTML-Edge-Cache');
   if (header) {
     options = {
       purge: false,

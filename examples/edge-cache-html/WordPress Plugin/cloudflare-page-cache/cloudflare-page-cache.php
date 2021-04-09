@@ -23,9 +23,9 @@ function cloudflare_page_cache_init_action() {
 	
 	// Add the edge-cache headers
   if (!is_user_logged_in() ) {
-    header( 'x-HTML-Edge-Cache: cache,bypass-cookies=wp-|wordpress|comment_|woocommerce_' );
+    header( 'X-HTML-Edge-Cache: cache,bypass-cookies=wp-|wordpress|comment_|woocommerce_' );
   } else {
-    header( 'x-HTML-Edge-Cache: nocache' );
+    header( 'X-HTML-Edge-Cache: nocache' );
 	}
 
 	// Post ID is received
@@ -55,7 +55,7 @@ function cloudflare_page_cache_purge() {
   static $purged = false;
   if (!$purged) {
     $purged = true;
-    header( 'x-HTML-Edge-Cache: purgeall' );
+    header( 'X-HTML-Edge-Cache: purgeall' );
   }
 }
 
