@@ -46,6 +46,13 @@ function cloudflare_page_cache_init_action() {
 	add_action( 'wp_update_nav_menu', 'cloudflare_page_cache_purge0' );
 	add_action( 'clean_post_cache', 'cloudflare_page_cache_purge1' );
 	add_action( 'transition_post_status', 'cloudflare_page_cache_post_transition', 10, 3 );
+
+	// My hooks
+	add_action( 'activated_plugin', 'cloudflare_page_cache_purge0' );
+	add_action( 'deactivated_plugin', 'cloudflare_page_cache_purge0' );
+	add_action( 'attachment_updated', 'cloudflare_page_cache_purge0' );
+	add_action( 'automatic_updates_complete', 'cloudflare_page_cache_purge0' );
+	add_action( '_core_updated_successfully', 'cloudflare_page_cache_purge0' );
 }
 add_action( 'init', 'cloudflare_page_cache_init_action' );
 
