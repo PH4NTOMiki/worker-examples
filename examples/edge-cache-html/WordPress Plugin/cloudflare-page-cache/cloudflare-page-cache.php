@@ -1,14 +1,14 @@
 <?php
 /*
-Plugin Name:  Cloudflare Page Cache
-Plugin URI:   https://github.com/cloudflare/worker-examples/tree/master/examples/edge-cache-html
+Plugin Name:  Cloudflare Page Cache Add-on
+Plugin URI:   https://github.com/ph4ntomiki/worker-examples/tree/master/examples/edge-cache-html
 Description:  Cache HTML pages on the Cloudflare CDN when used with the page cache Worker.
-Version:      1.4
-Author:       Patrick Meenan
-Author URI:   https://www.cloudflare.com/
+Version:      1.5
+Author:       Mihael Mutic - Miki
+Author URI:   https://mikitvba.com/
 License:      GPLv2 or later
 License URI:  http://www.gnu.org/licenses/gpl-2.0.html
-Text Domain:  cloudflare-page-cache
+Text Domain:  cloudflare-page-cache-addon
 Domain Path:  /languages
 */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
