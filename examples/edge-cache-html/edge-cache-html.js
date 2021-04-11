@@ -58,7 +58,7 @@ addEventListener("fetch", event => {
 async function processRequest(originalRequest, event) {
   let cfCacheStatus = null;
   const accept = originalRequest.headers.get('Accept');
-  const isHTML = (accept && accept.indexOf('text/html') >= 0);
+  const isHTML = (accept && (accept.indexOf('text/html') >= 0 || isPrefetchRequest(originalRequest.headers)));
   let {response, cacheVer, status, bypassCache} = await getCachedResponse(originalRequest);
 
   if (response === null) {
@@ -174,7 +174,7 @@ async function getCachedResponse(request) {
     noCache = true;
     status = 'Bypass for Reload';
   }
-  if (!noCache && request.method === 'GET' && accept && accept.indexOf('text/html') >= 0) {
+  if (!noCache && request.method === 'GET' && accept && (accept.indexOf('text/html') >= 0 || isPrefetchRequest(request.headers))) {
     // Build the versioned URL for checking the cache
     cacheVer = await GetCurrentCacheVersion(cacheVer);
     const cacheKeyRequest = GenerateCacheRequest(request, cacheVer);
@@ -279,7 +279,7 @@ async function updateCache(originalRequest, cacheVer, event) {
 async function cacheResponse(cacheVer, request, originalResponse, event) {
   let status = "";
   const accept = request.headers.get('Accept');
-  if (request.method === 'GET' && originalResponse.status === 200 && accept && accept.indexOf('text/html') >= 0) {
+  if (request.method === 'GET' && originalResponse.status === 200 && accept && (accept.indexOf('text/html') >= 0 || isPrefetchRequest(request.headers))) {
     cacheVer = await GetCurrentCacheVersion(cacheVer);
     const cacheKeyRequest = GenerateCacheRequest(request, cacheVer);
 
@@ -389,4 +389,13 @@ function GenerateCacheRequest(request, cacheVer) {
   }
   cacheUrl += 'cf_edge_cache_ver=' + cacheVer;
   return new Request(cacheUrl);
+}
+
+/**
+ * Checks is it prefetch request
+ * @param {Headers} headers - Headers
+ * @returns {Boolean} Is it prefetch request
+ */
+function isPrefetchRequest(headers){
+  return headers.get('Purpose') === 'prefetch' || headers.get('X-Purpose') === 'prefetch' || headers.get('X-moz') === 'prefetch';
 }
