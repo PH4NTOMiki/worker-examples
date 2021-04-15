@@ -1,3 +1,6 @@
+const splitter = ';;;;;;;;;;;;;;;;;;;;;;SPLITTER;;;;;;;;;;;;;;;;;;;;;;';
+
+
 // IMPORTANT: Either A Key/Value Namespace must be bound to this worker script
 // using the variable name EDGE_CACHE. or the API parameters below should be
 // configured. KV is recommended if possible since it can purge just the HTML
@@ -181,11 +184,10 @@ async function getCachedResponse(request) {
 
     // See if there is a request match in the cache
     try {
-      let cache = caches.default;
-      let cachedResponse = await cache.match(cacheKeyRequest);
+      let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
       if (cachedResponse) {
-        // Copy Response object so that we can edit headers.
-        cachedResponse = new Response(cachedResponse.body, cachedResponse);
+        let [headers, body] = cachedResponse.split(splitter);
+        cachedResponse = new Response(body, {headers: JSON.parse(headers)});
 
         // Check to see if the response needs to be bypassed because of a cookie
         bypassCache = shouldBypassEdgeCache(request, cachedResponse);
@@ -220,7 +222,7 @@ async function getCachedResponse(request) {
 
 /**
  * Asynchronously purge the HTML cache.
- * @param {Int} cacheVer - Current cache version (if retrieved)
+ * @param {Number} cacheVer - Current cache version (if retrieved)
  * @param {Event} event - Original event
  */
 async function purgeCache(cacheVer, event) {
@@ -268,9 +270,20 @@ async function updateCache(originalRequest, cacheVer, event) {
 }
 
 /**
+ * 
+ * @param {String} cacheKeyRequest
+ * @param {Response} response
+ */
+async function KVcacheResponse(cacheKeyRequest, response) {
+  let headers = {};
+  response.headers.forEach((v, k) => {headers[k]=v});
+  await EDGE_CACHE.put(cacheKeyRequest, [JSON.stringify(headers), response.body].join(splitter));
+}
+
+/**
  * Cache the returned content (but only if it was a successful GET request)
  * 
- * @param {Int} cacheVer - Current cache version (if already retrieved)
+ * @param {Number} cacheVer - Current cache version (if already retrieved)
  * @param {Request} request - Original Request
  * @param {Response} originalResponse - Response to (maybe) cache
  * @param {Event} event - Original event
@@ -287,7 +300,7 @@ async function cacheResponse(cacheVer, request, originalResponse, event) {
       // Move the cache headers out of the way so the response can actually be cached.
       // First clone the response so there is a parallel body stream and then
       // create a new response object based on the clone that we can edit.
-      let cache = caches.default;
+      
       let clonedResponse = originalResponse.clone();
       let response = new Response(clonedResponse.body, clonedResponse);
       for (header of CACHE_HEADERS) {
@@ -299,7 +312,7 @@ async function cacheResponse(cacheVer, request, originalResponse, event) {
       }
       response.headers.delete('Set-Cookie');
       response.headers.set('Cache-Control', 'public; maX-age=315360000');
-      event.waitUntil(cache.put(cacheKeyRequest, response));
+      event.waitUntil(KVcacheResponse(cacheKeyRequest, response));
       status = ", Cached";
     } catch (err) {
       // status = ", Cache Write Exception: " + err.message;
@@ -352,8 +365,8 @@ function getResponseOptions(response) {
 
 /**
  * Retrieve the current cache version from KV
- * @param {Int} cacheVer - Current cache version value if set.
- * @returns {Int} The current cache version.
+ * @param {Number} cacheVer - Current cache version value if set.
+ * @returns {Number} The current cache version.
  */
 async function GetCurrentCacheVersion(cacheVer) {
   if (cacheVer === null) {
@@ -377,8 +390,8 @@ async function GetCurrentCacheVersion(cacheVer) {
 /**
  * Generate the versioned Request object to use for cache operations.
  * @param {Request} request - Base request
- * @param {Int} cacheVer - Current Cache version (must be set)
- * @returns {Request} Versioned request object
+ * @param {Number} cacheVer - Current Cache version (must be set)
+ * @returns {String} Versioned request object
  */
 function GenerateCacheRequest(request, cacheVer) {
   let cacheUrl = request.url;
@@ -388,7 +401,7 @@ function GenerateCacheRequest(request, cacheVer) {
     cacheUrl += '?';
   }
   cacheUrl += 'cf_edge_cache_ver=' + cacheVer;
-  return new Request(cacheUrl);
+  return cacheUrl;
 }
 
 /**
