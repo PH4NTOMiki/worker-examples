@@ -62,7 +62,7 @@ async function processRequest(originalRequest, event) {
   let cfCacheStatus = null;
   const accept = originalRequest.headers.get('Accept');
   const isHTML = (accept && (accept.indexOf('text/html') >= 0 || isPrefetchRequest(originalRequest.headers)));
-  let {response, cacheVer, status, bypassCache} = await getCachedResponse(originalRequest);
+  let {response, cacheVer, status, bypassCache} = await getCachedResponse(originalRequest, event);
 
   if (response === null) {
     // Clone the request, add the edge-cache header and send it through.
@@ -162,7 +162,7 @@ const CACHE_HEADERS = ['Cache-Control', 'Expires', 'Pragma'];
  * 
  * @param {Request} request - Original request
  */
-async function getCachedResponse(request) {
+async function getCachedResponse(request, event) {
   let response = null;
   let cacheVer = null;
   let bypassCache = false;
@@ -182,14 +182,24 @@ async function getCachedResponse(request) {
     cacheVer = await GetCurrentCacheVersion(cacheVer);
     const cacheKeyRequest = GenerateCacheRequest(request, cacheVer);
 
+    let cachedResponse;
+
     // See if there is a request match in the cache
     // try {
-      //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
-      let {value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+      cachedInCacheAPI = await caches.default.match(new Request(cacheKeyRequest));
+      if(cachedInCacheAPI){
+        cachedResponse = new Response(cachedInCacheAPI.body, cachedInCacheAPI);
+      } else {
+        //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
+        let {value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+      }
       //if (cachedResponse) {
-      if (value) {
+      if (cachedResponse || typeof(value) !== 'undefined') {
         //let [headers, body] = cachedResponse.split(SPLITTER);
-        cachedResponse = new Response(value, {headers: metadata});
+        if(!cachedResponse && value){
+          cachedResponse = new Response(value, {headers: metadata});
+          event.waitUntil(await caches.default.put(new Request(cacheKeyRequest), cachedResponse.clone()));
+        }/* else if(!value){}*/
 
         // Check to see if the response needs to be bypassed because of a cookie
         bypassCache = shouldBypassEdgeCache(request, cachedResponse);
@@ -293,6 +303,7 @@ async function KVcacheResponse(cacheKeyRequest, response) {
   // delete headers["expect-ct"];
   // delete headers["server"];
   //await EDGE_CACHE.put(cacheKeyRequest, [JSON.stringify(headers), await response.text()].join(SPLITTER));
+  await caches.default.put(new Request(cacheKeyRequest), response.clone());
   await EDGE_CACHE.put(cacheKeyRequest, await response.text(), {metadata: headers});
 }
 
