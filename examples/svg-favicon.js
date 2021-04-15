@@ -22,7 +22,9 @@ async function cacheRequest(event){
  * @returns {Promise<Response>} Promised Response
  */
 async function handleRequest(event, request){
-	{pathname: path, origin} = new URL(request.url);
+	_url = new URL(request.url);
+	path = _url.pathname;
+	origin = _url.origin;
 	if(path.startsWith('/svg/')){
 		return new Response(`<svg width="128" height="128"><text x="20" y="35">${path.slice(5)}</text></svg>`, {headers: {'Content-Type': 'image/svg+xml', 'X-Type': 'generated'}});
 	} else {
