@@ -1,4 +1,4 @@
-const splitter = ';;;;;;;;;;;;;;;;;;;;;;SPLITTER;;;;;;;;;;;;;;;;;;;;;;';
+const SPLITTER = ';;;;;;;;;;;;;;;;;;;;;;SPLITTER;;;;;;;;;;;;;;;;;;;;;;';
 
 
 // IMPORTANT: Either A Key/Value Namespace must be bound to this worker script
@@ -183,11 +183,13 @@ async function getCachedResponse(request) {
     const cacheKeyRequest = GenerateCacheRequest(request, cacheVer);
 
     // See if there is a request match in the cache
-    try {
-      let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
-      if (cachedResponse) {
-        let [headers, body] = cachedResponse.split(splitter);
-        cachedResponse = new Response(body, {headers: JSON.parse(headers)});
+    // try {
+      //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
+      let {value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+      //if (cachedResponse) {
+      if (value) {
+        //let [headers, body] = cachedResponse.split(SPLITTER);
+        cachedResponse = new Response(value, {headers: metadata});
 
         // Check to see if the response needs to be bypassed because of a cookie
         bypassCache = shouldBypassEdgeCache(request, cachedResponse);
@@ -211,10 +213,10 @@ async function getCachedResponse(request) {
       } else {
         status = 'Miss';
       }
-    } catch (err) {
-      // Send the exception back in the response header for debugging
-      status = "Cache Read Exception: " + err.message;
-    }
+    // } catch (err) {
+    //   // Send the exception back in the response header for debugging
+    //   status = "Cache Read Exception: " + err.message;
+    // }
   }
 
   return {response, cacheVer, status, bypassCache};
@@ -276,8 +278,22 @@ async function updateCache(originalRequest, cacheVer, event) {
  */
 async function KVcacheResponse(cacheKeyRequest, response) {
   let headers = {};
-  response.headers.forEach((v, k) => {headers[k]=v});
-  await EDGE_CACHE.put(cacheKeyRequest, [JSON.stringify(headers), response.body].join(splitter));
+  response.headers.delete("cf-cache-status");
+  response.headers.delete("cf-ray");
+  response.headers.delete("cf-request-id");
+  response.headers.delete("connection");
+  response.headers.delete("expect-ct");
+  response.headers.delete("server");
+  for(let pair of response.headers.entries()){headers[pair[0]]=pair[1]}
+  //response.headers.forEach((v, k) => {headers[k]=v});
+  // delete headers["cf-cache-status"];
+  // delete headers["cf-ray"];
+  // delete headers["cf-request-id"];
+  // delete headers["connection"];
+  // delete headers["expect-ct"];
+  // delete headers["server"];
+  //await EDGE_CACHE.put(cacheKeyRequest, [JSON.stringify(headers), await response.text()].join(SPLITTER));
+  await EDGE_CACHE.put(cacheKeyRequest, await response.text(), {metadata: headers});
 }
 
 /**
