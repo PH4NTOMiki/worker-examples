@@ -121,7 +121,7 @@ async function processRequest(originalRequest, event) {
  * origin responses to determine if they should be written to cache.
  * @param {Request} request - Request
  * @param {Response} response - Response
- * @returns {bool} true if the cache should be bypassed
+ * @returns {Boolean} true if the cache should be bypassed
  */
 function shouldBypassEdgeCache(request, response) {
   let bypassCache = false;
@@ -314,7 +314,7 @@ async function KVcacheResponse(cacheKeyRequest, response) {
  * @param {Request} request - Original Request
  * @param {Response} originalResponse - Response to (maybe) cache
  * @param {Event} event - Original event
- * @returns {bool} true if the response was cached
+ * @returns {Boolean} true if the response was cached
  */
 async function cacheResponse(cacheVer, request, originalResponse, event) {
   let status = "";

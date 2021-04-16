@@ -118,7 +118,7 @@ async function processRequest(originalRequest, event) {
  * origin responses to determine if they should be written to cache.
  * @param {Request} request - Request
  * @param {Response} response - Response
- * @returns {bool} true if the cache should be bypassed
+ * @returns {Boolean} true if the cache should be bypassed
  */
 function shouldBypassEdgeCache(request, response) {
   let bypassCache = false;
@@ -220,7 +220,7 @@ async function getCachedResponse(request) {
 
 /**
  * Asynchronously purge the HTML cache.
- * @param {Int} cacheVer - Current cache version (if retrieved)
+ * @param {Number} cacheVer - Current cache version (if retrieved)
  * @param {Event} event - Original event
  */
 async function purgeCache(cacheVer, event) {
@@ -270,11 +270,11 @@ async function updateCache(originalRequest, cacheVer, event) {
 /**
  * Cache the returned content (but only if it was a successful GET request)
  * 
- * @param {Int} cacheVer - Current cache version (if already retrieved)
+ * @param {Number} cacheVer - Current cache version (if already retrieved)
  * @param {Request} request - Original Request
  * @param {Response} originalResponse - Response to (maybe) cache
  * @param {Event} event - Original event
- * @returns {bool} true if the response was cached
+ * @returns {Boolean} true if the response was cached
  */
 async function cacheResponse(cacheVer, request, originalResponse, event) {
   let status = "";
@@ -352,8 +352,8 @@ function getResponseOptions(response) {
 
 /**
  * Retrieve the current cache version from KV
- * @param {Int} cacheVer - Current cache version value if set.
- * @returns {Int} The current cache version.
+ * @param {Number} cacheVer - Current cache version value if set.
+ * @returns {Number} The current cache version.
  */
 async function GetCurrentCacheVersion(cacheVer) {
   if (cacheVer === null) {
@@ -377,7 +377,7 @@ async function GetCurrentCacheVersion(cacheVer) {
 /**
  * Generate the versioned Request object to use for cache operations.
  * @param {Request} request - Base request
- * @param {Int} cacheVer - Current Cache version (must be set)
+ * @param {Number} cacheVer - Current Cache version (must be set)
  * @returns {Request} Versioned request object
  */
 function GenerateCacheRequest(request, cacheVer) {
