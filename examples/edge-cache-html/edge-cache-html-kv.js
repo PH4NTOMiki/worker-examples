@@ -44,6 +44,9 @@ addEventListener("fetch", event => {
   if (accept && (accept.indexOf('image/*') !== -1)) {
     isImage = true;
   }
+  
+  let _url = request.url.toLowerCase().split('?')[0];
+  if(_url.endsWith('.js') || _url.endsWith('.css') || _url.endsWith('.png') || _url.endsWith('.jpg') || _url.endsWith('.jpeg') || _url.endsWith('.gif') || _url.endsWith('.webp') || _url.endsWith('.pdf') || _url.endsWith('.mp4') || _url.endsWith('.mp3') || _url.endsWith('.webm'))configured = false;
 
   if (configured && !isImage && upstreamCache === null) {
     event.passThroughOnException();
