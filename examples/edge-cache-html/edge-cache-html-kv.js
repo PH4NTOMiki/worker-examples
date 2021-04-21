@@ -186,20 +186,23 @@ async function getCachedResponse(request, event) {
     const cacheKeyRequest = GenerateCacheRequest(request, cacheVer);
 
     let cachedResponse;
+    let value, metadata;
 
     // See if there is a request match in the cache
-    // try {
+    try {
       cachedInCacheAPI = await caches.default.match(new Request(cacheKeyRequest));
       if(cachedInCacheAPI){
         cachedResponse = new Response(cachedInCacheAPI.body, cachedInCacheAPI);
       } else {
         //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
-        let {value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+        let {_value, _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+        value = _value;
+        metadata = _metadata;
       }
       //if (cachedResponse) {
-      if (cachedResponse || typeof(value) !== 'undefined') {
+      if (cachedResponse || value) {
         //let [headers, body] = cachedResponse.split(SPLITTER);
-        if(!cachedResponse && value){
+        if(!cachedResponse/* && value*/){
           cachedResponse = new Response(value, {headers: metadata});
           event.waitUntil(await caches.default.put(new Request(cacheKeyRequest), cachedResponse.clone()));
         }/* else if(!value){}*/
@@ -226,10 +229,10 @@ async function getCachedResponse(request, event) {
       } else {
         status = 'Miss';
       }
-    // } catch (err) {
-    //   // Send the exception back in the response header for debugging
-    //   status = "Cache Read Exception: " + err.message;
-    // }
+    } catch (err) {
+      // Send the exception back in the response header for debugging
+      status = "Cache Read Exception: " + err.message;
+    }
   }
 
   return {response, cacheVer, status, bypassCache};
