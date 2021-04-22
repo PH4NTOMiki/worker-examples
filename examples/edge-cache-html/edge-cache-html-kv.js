@@ -46,7 +46,7 @@ addEventListener("fetch", event => {
   }
   
   let _url = request.url.toLowerCase().split('?')[0];
-  if(_url.endsWith('.js') || _url.endsWith('.css') || _url.endsWith('.png') || _url.endsWith('.jpg') || _url.endsWith('.jpeg') || _url.endsWith('.gif') || _url.endsWith('.webp') || _url.endsWith('.pdf') || _url.endsWith('.mp4') || _url.endsWith('.mp3') || _url.endsWith('.webm'))configured = false;
+  if(_url.endsWith('.txt') || _url.endsWith('.xml') || _url.endsWith('.json') || _url.endsWith('.rss') || _url.endsWith('.js') || _url.endsWith('.css') || _url.endsWith('.png') || _url.endsWith('.jpg') || _url.endsWith('.jpeg') || _url.endsWith('.gif') || _url.endsWith('.webp') || _url.endsWith('.pdf') || _url.endsWith('.mp4') || _url.endsWith('.mp3') || _url.endsWith('.webm'))configured = false;
 
   if (configured && !isImage && upstreamCache === null) {
     event.passThroughOnException();
@@ -196,7 +196,9 @@ async function getCachedResponse(request, event) {
         cachedResponse = new Response(cachedInCacheAPI.body, cachedInCacheAPI);
       } else {logInfo += '\nTrying load from KV storage';
         //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
-        ;({value: _value, metadata: _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'}));
+        ;({value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'}));
+        
+        //let {value: _value, metadata: _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
         //value = _value;
         //metadata = _metadata;
         if(value)logInfo += '\nLoaded from KV storage';
