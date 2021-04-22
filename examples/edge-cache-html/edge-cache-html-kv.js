@@ -198,9 +198,9 @@ async function getCachedResponse(request, event) {
         //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
         ;({value, metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'}));
         
-        //let {value: _value, metadata: _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
-        //value = _value;
-        //metadata = _metadata;
+        /*let {value: _value, metadata: _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
+        value = _value;
+        metadata = _metadata;*/
         if(value)logInfo += '\nLoaded from KV storage';
       }
       //if (cachedResponse) {
@@ -234,7 +234,7 @@ async function getCachedResponse(request, event) {
         status = 'Miss';
         logInfo += '\nMiss';
       }
-      event.waitUntil(await EDGE_CACHE.put('log:'+Date.now(), logInfo));
+      //event.waitUntil(await EDGE_CACHE.put('log:'+Date.now(), logInfo));
     } catch (err) {
       // Send the exception back in the response header for debugging
       status = "Cache Read Exception: " + err.message;
@@ -433,14 +433,18 @@ async function GetCurrentCacheVersion(cacheVer) {
  * @returns {String} Versioned request object
  */
 function GenerateCacheRequest(request, cacheVer) {
-  let cacheUrl = request.url;
+  /*let cacheUrl = request.url;
   if (cacheUrl.indexOf('?') >= 0) {
     cacheUrl += '&';
   } else {
     cacheUrl += '?';
   }
   cacheUrl += 'cf_edge_cache_ver=' + cacheVer;
-  return cacheUrl;
+  return cacheUrl;*/
+  let cacheUrl = new URL(request.url);
+  ["fbclid", "_ga", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_brand", "utm_name"].forEach(e => cacheUrl.searchParams.delete(e));
+  cacheUrl.searchParams.set('cf_edge_cache_ver', cacheVer.toString());
+  return cacheUrl.href;
 }
 
 /**
