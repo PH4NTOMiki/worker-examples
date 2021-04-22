@@ -187,20 +187,22 @@ async function getCachedResponse(request, event) {
 
     let cachedResponse;
     let value, metadata;
+    let logInfo = cacheKeyRequest;
 
     // See if there is a request match in the cache
-    try {
+    try {logInfo += '\nTrying load from Cache API';
       cachedInCacheAPI = await caches.default.match(new Request(cacheKeyRequest));
-      if(cachedInCacheAPI){
+      if(cachedInCacheAPI){logInfo += '\nLoaded from Cache API';
         cachedResponse = new Response(cachedInCacheAPI.body, cachedInCacheAPI);
-      } else {
+      } else {logInfo += '\nTrying load from KV storage';
         //let cachedResponse = await EDGE_CACHE.get(cacheKeyRequest);
-        let {_value, _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'});
-        value = _value;
-        metadata = _metadata;
+        ;({value: _value, metadata: _metadata} = await EDGE_CACHE.getWithMetadata(cacheKeyRequest, {type: 'stream'}));
+        //value = _value;
+        //metadata = _metadata;
+        if(value)logInfo += '\nLoaded from KV storage';
       }
       //if (cachedResponse) {
-      if (cachedResponse || value) {
+      if (cachedResponse || value) {logInfo += '\ncachedResponse || value';
         //let [headers, body] = cachedResponse.split(SPLITTER);
         if(!cachedResponse/* && value*/){
           cachedResponse = new Response(value, {headers: metadata});
@@ -228,7 +230,9 @@ async function getCachedResponse(request, event) {
         }
       } else {
         status = 'Miss';
+        logInfo += '\nMiss';
       }
+      event.waitUntil(await EDGE_CACHE.put('log:'+Date.now(), logInfo));
     } catch (err) {
       // Send the exception back in the response header for debugging
       status = "Cache Read Exception: " + err.message;
