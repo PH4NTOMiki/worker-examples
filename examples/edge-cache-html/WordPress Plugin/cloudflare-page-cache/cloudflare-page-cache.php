@@ -53,6 +53,12 @@ function cloudflare_page_cache_init_action() {
 	add_action( 'attachment_updated', 'cloudflare_page_cache_purge0' );
 	add_action( 'automatic_updates_complete', 'cloudflare_page_cache_purge0' );
 	add_action( '_core_updated_successfully', 'cloudflare_page_cache_purge0' );
+
+	if ( isset( $_REQUEST['cf_clear_cache'] ) ) {
+		check_admin_referer( 'cf_clear_cache' );
+		cloudflare_page_cache_purge();
+		add_action( 'admin_notices', 'cf_clear_cache_success' );
+	}
 }
 add_action( 'init', 'cloudflare_page_cache_init_action' );
 
@@ -79,4 +85,28 @@ function cloudflare_page_cache_post_transition( $new_status, $old_status, $post 
   if ( $new_status != $old_status ) {
     cloudflare_page_cache_purge();
   }
+}
+
+/**
+ * add a link to the WP Toolbar
+ */
+function cf_toolbar_link( $wp_admin_bar ) {
+    $url = add_query_arg( '_wpnonce', wp_create_nonce( 'cf_clear_cache' ), admin_url() . '?cf_clear_cache=1' );
+    $args = array(
+        'id' => 'cf-clear-cache-link',
+        'title' => 'Cloudflare Clear Cache', 
+        'href' => $url, 
+        'meta' => array(
+            'title' => 'Cloudflare Clear Cache'
+        )
+    );
+    $wp_admin_bar->add_node( $args );
+}
+add_action( 'admin_bar_menu', 'cf_toolbar_link', 999 );
+
+function cf_clear_cache_success() { ?>
+    <div class="updated">
+        <p><?php _e( 'Cache cleared!', 'cloudflare-page-cache-addon' ); ?></p>
+    </div>
+<?php
 }
